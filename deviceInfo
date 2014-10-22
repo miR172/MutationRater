@@ -1,0 +1,105 @@
+/home/zh522/nvidia_sdk/bin/linux/release/deviceQuery Starting...
+
+ CUDA Device Query (Runtime API) version (CUDART static linking)
+
+Detected 3 CUDA Capable device(s)
+
+Device 0: "GeForce GTX TITAN Black"
+  CUDA Driver Version / Runtime Version          6.5 / 5.0
+  CUDA Capability Major/Minor version number:    3.5
+  Total amount of global memory:                 6144 MBytes (6442254336 bytes)
+  (15) Multiprocessors x (192) CUDA Cores/MP:    2880 CUDA Cores
+  GPU Clock rate:                                980 MHz (0.98 GHz)
+  Memory Clock rate:                             3500 Mhz
+  Memory Bus Width:                              384-bit
+  L2 Cache Size:                                 1572864 bytes
+  Max Texture Dimension Size (x,y,z)             1D=(65536), 2D=(65536,65536), 3D=(4096,4096,4096)
+  Max Layered Texture Size (dim) x layers        1D=(16384) x 2048, 2D=(16384,16384) x 2048
+  Total amount of constant memory:               65536 bytes
+  Total amount of shared memory per block:       49152 bytes
+  Total number of registers available per block: 65536
+  Warp size:                                     32
+  Maximum number of threads per multiprocessor:  2048
+  Maximum number of threads per block:           1024
+  Maximum sizes of each dimension of a block:    1024 x 1024 x 64
+  Maximum sizes of each dimension of a grid:     2147483647 x 65535 x 65535
+  Maximum memory pitch:                          2147483647 bytes
+  Texture alignment:                             512 bytes
+  Concurrent copy and kernel execution:          Yes with 1 copy engine(s)
+  Run time limit on kernels:                     No
+  Integrated GPU sharing Host Memory:            No
+  Support host page-locked memory mapping:       Yes
+  Alignment requirement for Surfaces:            Yes
+  Device has ECC support:                        Disabled
+  Device supports Unified Addressing (UVA):      Yes
+  Device PCI Bus ID / PCI location ID:           2 / 0
+  Compute Mode:
+     < Default (multiple host threads can use ::cudaSetDevice() with device simultaneously) >
+
+Device 1: "GeForce GTX TITAN Black"
+  CUDA Driver Version / Runtime Version          6.5 / 5.0
+  CUDA Capability Major/Minor version number:    3.5
+  Total amount of global memory:                 6144 MBytes (6442254336 bytes)
+  (15) Multiprocessors x (192) CUDA Cores/MP:    2880 CUDA Cores
+  GPU Clock rate:                                980 MHz (0.98 GHz)
+  Memory Clock rate:                             3500 Mhz
+  Memory Bus Width:                              384-bit
+  L2 Cache Size:                                 1572864 bytes
+  Max Texture Dimension Size (x,y,z)             1D=(65536), 2D=(65536,65536), 3D=(4096,4096,4096)
+  Max Layered Texture Size (dim) x layers        1D=(16384) x 2048, 2D=(16384,16384) x 2048
+  Total amount of constant memory:               65536 bytes
+  Total amount of shared memory per block:       49152 bytes
+  Total number of registers available per block: 65536
+  Warp size:                                     32
+  Maximum number of threads per multiprocessor:  2048
+  Maximum number of threads per block:           1024
+  Maximum sizes of each dimension of a block:    1024 x 1024 x 64
+  Maximum sizes of each dimension of a grid:     2147483647 x 65535 x 65535
+  Maximum memory pitch:                          2147483647 bytes
+  Texture alignment:                             512 bytes
+  Concurrent copy and kernel execution:          Yes with 1 copy engine(s)
+  Run time limit on kernels:                     No
+  Integrated GPU sharing Host Memory:            No
+  Support host page-locked memory mapping:       Yes
+  Alignment requirement for Surfaces:            Yes
+  Device has ECC support:                        Disabled
+  Device supports Unified Addressing (UVA):      Yes
+  Device PCI Bus ID / PCI location ID:           3 / 0
+  Compute Mode:
+     < Default (multiple host threads can use ::cudaSetDevice() with device simultaneously) >
+
+Device 2: "GeForce GTX 750 Ti"
+  CUDA Driver Version / Runtime Version          6.5 / 5.0
+  CUDA Capability Major/Minor version number:    5.0
+  Total amount of global memory:                 2048 MBytes (2147287040 bytes)
+MapSMtoCores for SM 5.0 is undefined.  Default to use 192 Cores/SM
+MapSMtoCores for SM 5.0 is undefined.  Default to use 192 Cores/SM
+  ( 5) Multiprocessors x (192) CUDA Cores/MP:    960 CUDA Cores
+  GPU Clock rate:                                1268 MHz (1.27 GHz)
+  Memory Clock rate:                             2700 Mhz
+  Memory Bus Width:                              128-bit
+  L2 Cache Size:                                 2097152 bytes
+  Max Texture Dimension Size (x,y,z)             1D=(65536), 2D=(65536,65536), 3D=(4096,4096,4096)
+  Max Layered Texture Size (dim) x layers        1D=(16384) x 2048, 2D=(16384,16384) x 2048
+  Total amount of constant memory:               65536 bytes
+  Total amount of shared memory per block:       49152 bytes
+  Total number of registers available per block: 65536
+  Warp size:                                     32
+  Maximum number of threads per multiprocessor:  2048
+  Maximum number of threads per block:           1024
+  Maximum sizes of each dimension of a block:    1024 x 1024 x 64
+  Maximum sizes of each dimension of a grid:     2147483647 x 65535 x 65535
+  Maximum memory pitch:                          2147483647 bytes
+  Texture alignment:                             512 bytes
+  Concurrent copy and kernel execution:          Yes with 1 copy engine(s)
+  Run time limit on kernels:                     No
+  Integrated GPU sharing Host Memory:            No
+  Support host page-locked memory mapping:       Yes
+  Alignment requirement for Surfaces:            Yes
+  Device has ECC support:                        Disabled
+  Device supports Unified Addressing (UVA):      Yes
+  Device PCI Bus ID / PCI location ID:           67 / 0
+  Compute Mode:
+     < Default (multiple host threads can use ::cudaSetDevice() with device simultaneously) >
+
+deviceQuery, CUDA Driver = CUDART, CUDA Driver Version = 6.5, CUDA Runtime Version = 5.0, NumDevs = 3, Device0 = GeForce GTX TITAN Black, Device1 = GeForce GTX TITAN Black, Device2 = GeForce GTX 750 Ti
