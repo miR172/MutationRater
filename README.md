@@ -15,5 +15,5 @@ ftp://hgnload.cse.ucsc.edu/goldenPath/hg38/chromosomes/chr*.fa.gz
 UNCOMPRESS:
 gunzip <file>.fa.gz
 
-------------sample get!
+------sample get!!!
 
