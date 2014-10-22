@@ -13,5 +13,7 @@ ftp://hgdownload.cse.ucsc.edu/goldenPath/hg38/vsPanTro4/hg38.panTro4.all.chain.g
 ftp://hgnload.cse.ucsc.edu/goldenPath/hg38/chromosomes/chr*.fa.gz
 
 UNCOMPRESS:
-gunzip <file>.fa.gz 
+gunzip <file>.fa.gz
+
+------------sample get!
 
