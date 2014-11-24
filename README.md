@@ -13,9 +13,17 @@ Format (http://genome.ucsc.edu/goldenPath/help/chain.html)
 chain score tName tSize tStrand tStart tEnd qName qSize qStrand qStart qEnd id
  
 2.Complete Genome Sequences By Chromosome
+hg38 -> chr1
+http://hgdownload.soe.ucsc.edu/goldenPath/hg38/chromosomes/chr1.fa.gz
 
 UNCOMPRESS:
 gunzip <file>.fa.gz
 
 ------sample get!!!
+
+PyCuda
+module avail # view all module
+module load <package-version> # load module
+# ssh cuda1, python is defautly loaded
+module load cuda-5.5
 
