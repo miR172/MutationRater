@@ -21,8 +21,9 @@ This class reads in a chr*.fa file and allow queries on it
 
 ### generateAlignments(file)
 	
-input: a file with path *file* containing alignments info of a chromosome
-output: a list of list. each element is a list: [*alignment length*, *start index of alignment for reference sequence*, *start index of alignment for query sequence*]
+Input: a file with path *file* containing alignments info of a chromosome. 
+
+Output: a list of list. each element is a list: [*alignment length*, *start index of alignment for reference sequence*, *start index of alignment for query sequence*]
    	
    	>>> a = generateAlignments("../result")
    	>>> a[-1]
