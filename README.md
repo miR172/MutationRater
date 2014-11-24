@@ -6,11 +6,13 @@ Alignment File Format Described:
 
 
 Samples Download From FTP
-1.hg38-chimp alignement
-ftp://hgdownload.cse.ucsc.edu/goldenPath/hg38/vsPanTro4/hg38.panTro4.all.chain.gz
-
-2.Complete Genome Sequences By Chromosome:
-ftp://hgnload.cse.ucsc.edu/goldenPath/hg38/chromosomes/chr*.fa.gz
+1.hg38(human)-pantro4(chimp) alignement
+hg38.panTro4.all.chain.gz
+Format (http://genome.ucsc.edu/goldenPath/help/chain.html)
+0     1     2     3     4       5      6    7     8     9       10     11   12
+chain score tName tSize tStrand tStart tEnd qName qSize qStrand qStart qEnd id
+ 
+2.Complete Genome Sequences By Chromosome
 
 UNCOMPRESS:
 gunzip <file>.fa.gz
