@@ -1,23 +1,30 @@
 import pycuda.autoinit
-import pycuda.driver as drv
+import pycuda.driver as cuda
+from pycuda.compiler import SourceModule
 import numpy
 
-from pycuda.compiler import SourceModule
-mod = SourceModule("""
-__global__ void multiply_them(float *dest, float *a, float *b)
-{
-  const int i = threadIdx.x;
-  dest[i] = a[i] * b[i];
+
+add = SourceModule("""
+__global__ void add_kernel(int * a, int * b, int *c){
+  int i = threadIdx.y*threadIdx.y + threadIdx.x;
+  c[i] = i;
 }
 """)
+msize = 32
+add_k = add.get_function("add_kernel")
+a = numpy.array(range(0, msize)).astype(int)
+b = numpy.array(range(msize, 0, -1)).astype(int)
+c = numpy.array([1]*msize).astype(int)
+# print "a.len:%d b.len:%d c.len:%d" %(a.size, b.size, c.size)
 
-multiply_them = mod.get_function("multiply_them")
+c_zuo = cuda.mem_alloc(c.nbytes) # allocate, if not, use cuda.In and cuda.Out
+cuda.memcpy_htod(c_zuo, c)
 
-a = numpy.random.randn(400).astype(numpy.float32)
-b = numpy.random.randn(400).astype(numpy.float32)
+add_k(cuda.In(a), cuda.In(b), c_zuo,
+           block = (msize, 1, 1))
 
-dest = numpy.zeros_like(a)
-multiply_them(
-        drv.Out(dest), drv.In(a), drv.In(b),
-        block=(400,1,1), grid=(1,1))
-print dest - a*b
+d = numpy.empty_like(c)
+print a.size, a
+print b.size, b
+cuda.memcpy_dtoh(d, c_zuo)
+print d.size, d
