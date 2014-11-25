@@ -1,11 +1,11 @@
 ## helper.py
 
-### SequenceReader
+### class SequenceReader
 This class reads in a chr*.fa file and allow queries on it
 
 - **SequenceReader(file)**
 
-	constructor: opens a sequence file called *file* with standard format. 
+	constructor: opens a sequence file with path *file* with standard format. 
 	```
 	>>> from helper import *
 	>>> sr = SequenceReader("../data/chr1.fa")
@@ -18,3 +18,14 @@ This class reads in a chr*.fa file and allow queries on it
 	>>> sr.getStartWithLen(87771,15)
 	'CCAGCCCTCTTGGCC'
 	```
+
+### generateAlignments(file)
+	
+Input: a file with path *file* containing alignments info of a chromosome. 
+
+Output: a list of list. each element is a list: [*alignment length*, *start index of alignment for reference sequence*, *start index of alignment for query sequence*]
+   	
+   	>>> a = generateAlignments("../result")
+   	>>> a[-1]
+   	[209, 248641117, 228159138]
+
