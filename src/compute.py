@@ -79,13 +79,15 @@ while aligns!= []:
   al = aligns.pop(0)
   ts = treader.getStartWithLen(al[1], al[0])
   qs = qreader.getSrartWithLen(al[2], al[0])
+
   if len(ts) <= remain:
     remain -= len(ts)
   else:
     indel_dis += getIndelDist(len(ts)-remain)
-    remain = windowSize - abs(len(ts)-remain)%windowSize
+    remain = windowSize - (len(ts)-remain)%windowSize
   # print len(ts), len(qs)
-  if al[0] + pairlength >=0: # reach maximum, initial a load
+
+  if al[0] + pairlen >=0: # reach maximum, initial a load
     if print_c:
       # if previously did someth, export the result
       helper.export_result(c, indel_dis_c, outf)
@@ -100,11 +102,14 @@ while aligns!= []:
     cuda.memcpy_htod(b_d, b_h)
 
     # call the kernel
-    comp(cuda.In(a_h), cuda.In(b_h), cuda.Out(c), block = (blockx, 1, 1), grid = (gridx, 1)
+    comp(a_d, b_d, cuda.Out(c), block = (blockx, 1, 1), grid = (gridx, 1)
     print_c = True
 
     # reset a_h, b_h, indel_dis
     a_h, b_h = ts[pairlenMax-pairlen::], qs[pairlenMax-pairlen::]
     indel_dis = indel_dis[pairlenMax/windowSize::]
-   
 
+  else:
+    pairlen += len(ts)
+    a_h += ts
+    b_h += qs
