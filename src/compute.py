@@ -51,7 +51,9 @@ __global__ void compare(char * a, char * b, float *c){
   __syncthreads(); 
   
   if (threadIdx.y < 1)
-    c[blockIdx.x*blockDim.x*blockDim.y+threadIdx.x] = ((float)d_sum[threadIdx.x])/32;
+    //c[blockIdx.x*blockDim.x*blockDim.y+threadIdx.x] = ((float)d_sum[threadIdx.x])/32;
+    c[blockIdx.x*blockDim.x*blockDim.y+threadIdx.x] = 32; 
+
 }
 """
 
@@ -82,43 +84,56 @@ print_c = False
 #b_d = cuda.mem_alloc(pairlenMax)
 
 while aligns!= []:
-  al = aligns.pop(0)
-  print al
-  ts = treader.getStartWithLen(al[1], al[0])
-  qs = qreader.getStartWithLen(al[2], al[0])
 
-  if len(ts) <= remain:
-    remain -= len(ts)
-  else:
-    indel_dis += helper.getIndelDist(len(ts)-remain)
-    remain = windowSize - abs(len(ts)-remain)%windowSize
-  # print len(ts), len(qs)
+  print "\nNew iteration...\n"
+  print len(a_h), len(b_h), pairlen
 
-  if al[0] + pairlen >= pairlenMax: # reach maximum, initial a load
-    print "\n\n[pairlen] hit [pairlenMax], initial kernel call with [", print_c, "] previous result to export.\n"
-    if print_c:
-      #if previously did someth, export the result
-      helper.export_result(c, indel_dis_c, outf)
+  if pairlen < pairlenMax:
 
-    a_h += ts[0:pairlenMax-pairlen]
-    b_h += qs[0:pairlenMax-pairlen]
-    indel_dis_c = indel_dis[0:pairlenMax/windowSize]
+    al = aligns.pop(0)
+  
+    pairlen += al[0]
 
-    # cuda.memcpy_htod(a_d, a_h)
-    # cuda.memcpy_htod(b_d, b_h)
-    a_d = a_h
-    b_d = b_h
+    ts = treader.getStartWithLen(al[1], al[0])
+    qs = qreader.getStartWithLen(al[2], al[0])
 
-    # call the kernel
-    comp(cuda.In(a_d), cuda.In(b_d), cuda.Out(c), block = (blockx/windowSize, windowSize, 1), grid = (gridx, 1))
-    print_c = True
-    print "\nKernel returns."
+    if len(ts) <= remain:
+      remain -= len(ts)
+    else:
+      indel_dis += helper.getIndelDist(len(ts)-remain)
+      remain = windowSize - abs(len(ts)-remain)%windowSize
+    # print len(ts), len(qs)
 
-    # reset a_h, b_h, indel_dis
-    a_h, b_h = ts[pairlenMax-pairlen::], qs[pairlenMax-pairlen::]
-    indel_dis = indel_dis[pairlenMax/windowSize::]
-
-  else:
-    pairlen += len(ts)
     a_h += ts
     b_h += qs
+
+    continue
+
+    # reach maximum, initial a load
+  print "\n\n[pairlen] hit [pairlenMax], initial kernel call with [", print_c, "] previous result to export.\n"
+  if print_c:
+    #if previously did someth, export the result
+    helper.export_result(c, indel_dis_c, outf)
+
+  indel_dis_c = indel_dis[0:pairlenMax/windowSize]
+
+
+  # cuda.memcpy_htod(a_d, a_h)
+  # cuda.memcpy_htod(b_d, b_h)
+  a_d = numpy.fromstring(a_h[0:pairlenMax], dtype=numpy.int8)
+  b_d = numpy.fromstring(b_h[0:pairlenMax], dtype=numpy.int8)  
+
+  #print a_d
+  #print b_d
+  print indel_dis_c
+
+  a_h = a_h[pairlenMax:]
+  b_h = b_h[pairlenMax:]
+  indel_dis = indel_dis[pairlenMax/windowSize::]
+  pairlen = len(a_h)
+  
+  # call the kernel
+  comp(cuda.In(a_d), cuda.In(b_d), cuda.Out(c), block = (blockx/windowSize, windowSize, 1), grid = (gridx, 1))
+  print_c = True
+  print "\nKernel returns."
+
