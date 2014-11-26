@@ -53,10 +53,8 @@ def generateAlignments(file):
 
 
 def export_result(a, b, f):
-    outf = open(f, 'a')
     for i in xrange(0, len(b)):
-        outf.write("%f\t%d\n"%(a[i],b[i]))
-    outf.close()
+        f.write("%f\t%d\n"%(a[i],b[i]))
 
 def getIndelDist(length, windowsize=32):
     if length <= windowsize: return [0]

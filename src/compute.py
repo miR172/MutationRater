@@ -24,7 +24,9 @@ for f in sys.argv[1::len(sys.argv)-1]:
     print help_doc
     sys.exit()
 
-outf = "result.txt" if len(sys.argv) < 5 else sys.argv[4]
+f = "result.txt" if len(sys.argv) < 5 else sys.argv[4]
+outf = open(f, 'w')
+
 print "comparing\n"+sys.argv[1]+"\nand\n"+sys.argv[2]+"\nto\n"+outf
 
 #sys.exit()
@@ -137,3 +139,5 @@ while aligns!= []:
   print_c = True
   print "\nKernel returns."
 
+
+outf.close()
