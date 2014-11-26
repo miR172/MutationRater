@@ -19,6 +19,7 @@ for f in sys.argv[1::]:
     print help_doc
     sys.exit()
 
+outf = "result.txt" if len(sys.argv) < 5 else sys.argv[4] 
 # sys.exit()
 
 import pycuda.autoinit
@@ -28,7 +29,7 @@ import numpy
 import helper # module we build to support retrieving sequence
 
 kernel_script = """
-__global__ void compare(char * a, char * b, float *c){
+__global__ void compare(char ** a, char ** b, float *c){
   
   __shared__ char ts[32][32];
   __shared__ char qs[32][32];
@@ -44,11 +45,11 @@ __global__ void compare(char * a, char * b, float *c){
       n += 1;
   }
 
-  c[i] = (float)n/32;
+  c[blockIdx.x*blockDim.x+i] = (float)n/32;
 }
 """
 
-aligns = helper.get_align(sys.argv[3]) # assume this from api for now
+aligns = helper.generateAlignments(sys.argv[3]) # assume this from api for now
 treader = helper.SequenceReader(sys.argv[2])
 qreader = helper.SequenceReader(sys.argv[1])
 
@@ -57,20 +58,34 @@ comp = mod.get_function("compare")
 
 # a = "numpy.array(range(0, msize)).astype(numpy.int32)"
 # b = "numpy.array(range(msize, 0)).astype(numpy.int32)"
-for al in aligns:
-  ts = treader.getStartWithLen(al.tstart, al.len)
-  qs = qreader.getSrartWithLen(al.qstart, al.len)
-  print len(ts), len(qs)
+ 
+gridx, blockx = 60000, 32
+pairlen = 0
+pairlenMax = gridx*blockx*32
+a_h, b_h = "", "" # two concatenated sequences to be loaded on GPU
+c = numpy.array(range(0, 32)).astype(numpy.float32)
+print_c = False
+#a_d = cuda.mem_alloc(pairlenMax*4)
+#b_d = cuda.mem_alloc(pairlenMax*4)
 
-  a_d = cuda.mem_alloc(len(a)*4)
-  b_d = cuda.mem_alloc(len(a)*4)
-  cuda.memcpy_htod(a_d, a)
-  cuda.memcpy_htod(b_d, b)
+while aligns!= []:
+  al = aligns.pop(0)
+  ts = treader.getStartWithLen(al[1], al[0])
+  qs = qreader.getSrartWithLen(al[2], al[0])
+  # print len(ts), len(qs)
+  if al[0] + pairlength >=0: # reach maximum, initial a load
+    if print_c:
+      # if previously did someth, export the result
+      helper.export_result(c, indel_dis, outf)
 
-  c = numpy.array([False]*msize).astype(bool)
+    a_h += ts[0:pairlenMax-pairlen]
+    b_h += qs[0:pairlenMax-pairlen]
+    a_d = list(a_h[i:i+blockx] for i in xrange(0, len(a_h), blockx))
+    b_d = list(a_h[i:i+blockx] for i in xrange(0, len(a_h), blockx))
+    a_h, b_h = ts[pairlenMax-pairlen::], qs[pairlenMax-pairlen::]
+    #cuda.memcpy_htod(a_d, a_h)
+    #cuda.memcpy_htod(b_d, b_h)
 
-# call the kernel
-comp(a_d, b_d, cuda.Out(c),
-           block = (msize, 1, 1))
-
-print c.size, c
+    # call the kernel
+    comp(cuda.In(a_h), cuda.In(b_h), cuda.Out(c), block = (blockx, 1, 1), grid = (gridx, 1))
+    

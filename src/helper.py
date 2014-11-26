@@ -49,4 +49,11 @@ def generateAlignments(file):
 		line = f.readline()
 	
 	return alignments		
-			
+
+
+def export_result(a, b, f):
+    outf = open(f, 'w')
+    for i in xrange(0, len(b)):
+        outf.write("%f\t%d\n"%(a[i],b[i]))
+    outf.close()
+
