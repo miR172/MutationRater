@@ -1,9 +1,14 @@
 import sys
+
 help_doc="""
 Invalid Arguments.
 
 Usage:
-\tpython compute.py target_seuqence_dir query_sequence_dir alignment_dir
+\tpython compute.py \ \n
+\t  target_seuqence_dir \ \n
+\t  query_sequence_dir \ \n
+\t  alignment_dir \ \n
+\t  default(outputfilename)=result.txt \n
 
 Exit...
 """
@@ -13,7 +18,7 @@ if len(sys.argv) < 4:
   sys.exit()
 
 import os
-for f in sys.argv[1::]:
+for f in sys.argv[1::len(sys.argv)-1]:
   if not os.path.isfile(f):
     print "File Doesn't Exist:"+f
     print help_doc
@@ -32,17 +37,24 @@ kernel_script = """
 __global__ void compare(char * a, char * b, float *c){
   
   __shared__ int d_sum[32];
+  
+  if (threadIdx.y < 1)
+    d_sum[threadIdx.x] = 0;
+  __syncthreads();
 
-  int i = threadIdx.x+blockIdx.x*blockDim.x;
+  int i = threadIdx.x*blockDim.x+threadIdx.y+blockIdx.x*blockDim.x*blockDim.y;
   int d = i/32;
   if (a[i] == b[i])
     d_sum[d] += 1;
-  if (threadIdx.x == 0)
-    c[blockIdx.x*32+d] = ((float)d_sum[d])/32;
+
+  __syncthreads(); 
+  
+  if (threadIdx.y < 1)
+    c[blockIdx.x*blockDim.x*blockDim.y+threadIdx.x] = ((float)d_sum[threadIdx.x])/32;
 }
 """
 
-aligns = helper.generateAlignments(sys.argv[3]) # assume this from api for now
+aligns = helper.generateAlignments(sys.argv[3]) 
 treader = helper.SequenceReader(sys.argv[2])
 qreader = helper.SequenceReader(sys.argv[1])
 
@@ -71,7 +83,7 @@ b_d = cuda.mem_alloc(pairlenMax)
 while aligns!= []:
   al = aligns.pop(0)
   ts = treader.getStartWithLen(al[1], al[0])
-  qs = qreader.getSrartWithLen(al[2], al[0])
+  qs = qreader.getStartWithLen(al[2], al[0])
 
   if len(ts) <= remain:
     remain -= len(ts)
@@ -95,7 +107,7 @@ while aligns!= []:
     cuda.memcpy_htod(b_d, b_h)
 
     # call the kernel
-    comp(a_d, b_d, cuda.Out(c), block = (blockx, 1, 1), grid = (gridx, 1)
+    comp(a_d, b_d, cuda.Out(c), block = (blockx/windowSize, windowSize, 1), grid = (gridx, 1))
     print_c = True
 
     # reset a_h, b_h, indel_dis
