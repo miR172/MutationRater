@@ -56,6 +56,7 @@ def export_result(a, b, f):
     for i in xrange(0, len(b)):
         f.write("%f\t%d\n"%(a[i],b[i]))
 
+
 def getIndelDist(length, windowsize=32):
     if length <= windowsize: return [0]
     if length <= 2*windowsize: return [0, 0]
@@ -65,4 +66,12 @@ def getIndelDist(length, windowsize=32):
     if w%2 == 0: return r1+r2
     else: return r1+[w/2]+r2
 
-    
+def comp(a, b, c, windowSize):
+    n, i = 0, 0
+    while (i<len(a)):
+        if a[i] != b[i]: n+=1
+        if i%windowSize == windowSize-1:
+            c[i/windowSize] = float(n)/windowSize
+            print "c[%d] %f n %d"%(i, c[i/windowSize], n)
+            n = 0
+        i += 1
