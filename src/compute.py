@@ -27,7 +27,7 @@ for f in sys.argv[1::len(sys.argv)-1]:
 f = "result.txt" if len(sys.argv) < 5 else sys.argv[4]
 outf = open(f, 'w')
 
-print "comparing\n"+sys.argv[1]+"\nand\n"+sys.argv[2]+"\nto\n"+outf
+print "comparing\n"+sys.argv[1]+"\nand\n"+sys.argv[2]+"\nto\n"+f
 
 #sys.exit()
 
@@ -46,22 +46,21 @@ __global__ void compare(char * a, char * b, float *c){
     d_sum[threadIdx.x] = 0;
   __syncthreads();
 
-  int i = threadIdx.x*blockDim.x+threadIdx.y+blockIdx.x*blockDim.x*blockDim.y;
-  if (a[i] == b[i])
+  int i = threadIdx.x*blockDim.y+threadIdx.y+blockIdx.x*blockDim.x*blockDim.y;
+  if (a[i] != b[i])
     d_sum[threadIdx.x] += 1;
 
   __syncthreads(); 
   
   if (threadIdx.y < 1)
-    //c[blockIdx.x*blockDim.x*blockDim.y+threadIdx.x] = ((float)d_sum[threadIdx.x])/32;
-    c[blockIdx.x*blockDim.x*blockDim.y+threadIdx.x] = 32; 
+    c[blockIdx.x*blockDim.x+threadIdx.x] = ((float)d_sum[threadIdx.x])/32;
 
 }
 """
 
 aligns = helper.generateAlignments(sys.argv[3]) 
-treader = helper.SequenceReader(sys.argv[2])
-qreader = helper.SequenceReader(sys.argv[1])
+treader = helper.SequenceReader(sys.argv[1])
+qreader = helper.SequenceReader(sys.argv[2])
 
 mod = SourceModule(kernel_script)
 comp = mod.get_function("compare")
@@ -98,7 +97,6 @@ while aligns!= []:
 
     ts = treader.getStartWithLen(al[1], al[0])
     qs = qreader.getStartWithLen(al[2], al[0])
-
     if len(ts) <= remain:
       remain -= len(ts)
     else:
@@ -118,17 +116,15 @@ while aligns!= []:
     helper.export_result(c, indel_dis_c, outf)
 
   indel_dis_c = indel_dis[0:pairlenMax/windowSize]
-
-
+  
   # cuda.memcpy_htod(a_d, a_h)
   # cuda.memcpy_htod(b_d, b_h)
-  a_d = numpy.fromstring(a_h[0:pairlenMax], dtype=numpy.int8)
-  b_d = numpy.fromstring(b_h[0:pairlenMax], dtype=numpy.int8)  
+  a_d = numpy.fromstring(a_h[0:pairlenMax], dtype=numpy.uint8)
+  b_d = numpy.fromstring(b_h[0:pairlenMax], dtype=numpy.uint8)  
 
   #print a_d
   #print b_d
   print indel_dis_c
-
   a_h = a_h[pairlenMax:]
   b_h = b_h[pairlenMax:]
   indel_dis = indel_dis[pairlenMax/windowSize::]
