@@ -29,23 +29,16 @@ import numpy
 import helper # module we build to support retrieving sequence
 
 kernel_script = """
-__global__ void compare(char ** a, char ** b, float *c){
+__global__ void compare(char * a, char * b, float *c){
   
-  __shared__ char ts[32][32];
-  __shared__ char qs[32][32];
+  __shared__ int d_sum[32];
 
-  int i = threadIdx.x;
-  ts[i] = a[blockIdx.x*blockDim.x+i];  
-  qs[i] = b[blockIdx.x*blockDim.x+i];
-
-  int j = 0;
-  int n = 0;
-  for (; j<32; j++){
-    if (ts[i][j] == qs[i][j])
-      n += 1;
-  }
-
-  c[blockIdx.x*blockDim.x+i] = (float)n/32;
+  int i = threadIdx.x+blockIdx.x*blockDim.x;
+  int d = i/32;
+  if (a[i] == b[i])
+    d_sum[d] += 1;
+  if (threadIdx.x == 0)
+    c[blockIdx.x*32+d] = ((float)d_sum[d])/32;
 }
 """
 
@@ -59,9 +52,9 @@ comp = mod.get_function("compare")
 # a = "numpy.array(range(0, msize)).astype(numpy.int32)"
 # b = "numpy.array(range(msize, 0)).astype(numpy.int32)"
 
-gridx, blockx = 60000, 32
+gridx, blockx = 60000, 1024
 pairlen = 0
-pairlenMax = gridx*blockx*32
+pairlenMax = gridx*blockx
 
 indel_dis = []
 indel_dis_c = []
