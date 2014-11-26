@@ -83,8 +83,13 @@ while aligns!= []:
   if len(ts) <= remain:
     remain -= len(ts)
   else:
+<<<<<<< HEAD
     indel_dis += getIndelDist(len(ts)-remain)
     remain = windowSize - (len(ts)-remain)%windowSize
+=======
+    indel_dis += helper.getIndelDist(len(ts)-remain)
+    remain = windowSize - abs(len(ts)-remain)%windowSize
+>>>>>>> a7862728ad6a18ea98ec1efcad148d18e0ea7b6f
   # print len(ts), len(qs)
 
   if al[0] + pairlen >=0: # reach maximum, initial a load
