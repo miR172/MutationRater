@@ -24,8 +24,10 @@ for f in sys.argv[1::len(sys.argv)-1]:
     print help_doc
     sys.exit()
 
-outf = "result.txt" if len(sys.argv) < 5 else sys.argv[4] 
-# sys.exit()
+outf = "result.txt" if len(sys.argv) < 5 else sys.argv[4]
+print "comparing\n"+sys.argv[1]+"\nand\n"+sys.argv[2]+"\nto\n"+outf
+
+#sys.exit()
 
 import pycuda.autoinit
 import pycuda.driver as cuda
@@ -36,14 +38,13 @@ import helper # module we build to support retrieving sequence
 kernel_script = """
 __global__ void compare(char * a, char * b, float *c){
   
-  __shared__ int d_sum[32];
+  __shared__ int d_sum[16];
   
   if (threadIdx.y < 1)
     d_sum[threadIdx.x] = 0;
   __syncthreads();
 
   int i = threadIdx.x*blockDim.x+threadIdx.y+blockIdx.x*blockDim.x*blockDim.y;
-  int d = i/32;
   if (a[i] == b[i])
     d_sum[threadIdx.x] += 1;
 
@@ -64,7 +65,7 @@ comp = mod.get_function("compare")
 # a = "numpy.array(range(0, msize)).astype(numpy.int32)"
 # b = "numpy.array(range(msize, 0)).astype(numpy.int32)"
 
-gridx, blockx = 60000, 1024
+gridx, blockx = 1, 512
 pairlen = 0
 pairlenMax = gridx*blockx
 
@@ -77,11 +78,12 @@ c = numpy.array(range(0, pairlenMax/windowSize)).astype(numpy.float32)
 
 print_c = False
 
-a_d = cuda.mem_alloc(pairlenMax)
-b_d = cuda.mem_alloc(pairlenMax)
+#a_d = cuda.mem_alloc(pairlenMax)
+#b_d = cuda.mem_alloc(pairlenMax)
 
 while aligns!= []:
   al = aligns.pop(0)
+  print al
   ts = treader.getStartWithLen(al[1], al[0])
   qs = qreader.getStartWithLen(al[2], al[0])
 
@@ -93,22 +95,24 @@ while aligns!= []:
   # print len(ts), len(qs)
 
   if al[0] + pairlen >= pairlenMax: # reach maximum, initial a load
+    print "\n\n[pairlen] hit [pairlenMax], initial kernel call with [", print_c, "] previous result to export.\n"
     if print_c:
-      # if previously did someth, export the result
+      #if previously did someth, export the result
       helper.export_result(c, indel_dis_c, outf)
 
     a_h += ts[0:pairlenMax-pairlen]
     b_h += qs[0:pairlenMax-pairlen]
     indel_dis_c = indel_dis[0:pairlenMax/windowSize]
 
-    # a_d = list(a_h[i:i+blockx] for i in xrange(0, len(a_h), blockx))
-    # b_d = list(a_h[i:i+blockx] for i in xrange(0, len(a_h), blockx))
-    cuda.memcpy_htod(a_d, a_h)
-    cuda.memcpy_htod(b_d, b_h)
+    # cuda.memcpy_htod(a_d, a_h)
+    # cuda.memcpy_htod(b_d, b_h)
+    a_d = a_h
+    b_d = b_h
 
     # call the kernel
-    comp(a_d, b_d, cuda.Out(c), block = (blockx/windowSize, windowSize, 1), grid = (gridx, 1))
+    comp(cuda.In(a_d), cuda.In(b_d), cuda.Out(c), block = (blockx/windowSize, windowSize, 1), grid = (gridx, 1))
     print_c = True
+    print "\nKernel returns."
 
     # reset a_h, b_h, indel_dis
     a_h, b_h = ts[pairlenMax-pairlen::], qs[pairlenMax-pairlen::]
