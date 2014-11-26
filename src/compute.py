@@ -100,7 +100,7 @@ while aligns!= []:
     cuda.memcpy_htod(b_d, b_h)
 
     # call the kernel
-    comp(cuda.In(a_h), cuda.In(b_h), cuda.Out(c), block = (blockx, 1, 1), grid = (gridx, 1)
+    comp(a_d, b_d, cuda.Out(c), block = (blockx, 1, 1), grid = (gridx, 1)
     print_c = True
 
     # reset a_h, b_h, indel_dis
