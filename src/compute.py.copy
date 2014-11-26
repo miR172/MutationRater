@@ -58,58 +58,34 @@ comp = mod.get_function("compare")
 
 # a = "numpy.array(range(0, msize)).astype(numpy.int32)"
 # b = "numpy.array(range(msize, 0)).astype(numpy.int32)"
-
+ 
 gridx, blockx = 60000, 32
 pairlen = 0
 pairlenMax = gridx*blockx*32
-
-indel_dis = []
-indel_dis_c = []
-windowSize, remain = 32, 0
-
 a_h, b_h = "", "" # two concatenated sequences to be loaded on GPU
-c = numpy.array(range(0, pairlenMax/windowSize)).astype(numpy.float32)
-
+c = numpy.array(range(0, 32)).astype(numpy.float32)
 print_c = False
-
-a_d = cuda.mem_alloc(pairlenMax)
-b_d = cuda.mem_alloc(pairlenMax)
+#a_d = cuda.mem_alloc(pairlenMax*4)
+#b_d = cuda.mem_alloc(pairlenMax*4)
 
 while aligns!= []:
   al = aligns.pop(0)
   ts = treader.getStartWithLen(al[1], al[0])
   qs = qreader.getSrartWithLen(al[2], al[0])
-
-  if len(ts) <= remain:
-    remain -= len(ts)
-  else:
-    indel_dis += helper.getIndelDist(len(ts)-remain)
-    remain = windowSize - abs(len(ts)-remain)%windowSize
   # print len(ts), len(qs)
-
-  if al[0] + pairlen >=0: # reach maximum, initial a load
+  if al[0] + pairlength >=0: # reach maximum, initial a load
     if print_c:
       # if previously did someth, export the result
-      helper.export_result(c, indel_dis_c, outf)
+      helper.export_result(c, indel_dis, outf)
 
     a_h += ts[0:pairlenMax-pairlen]
     b_h += qs[0:pairlenMax-pairlen]
-    indel_dis_c = indel_dis[0:pairlenMax/windowSize]
-
-    # a_d = list(a_h[i:i+blockx] for i in xrange(0, len(a_h), blockx))
-    # b_d = list(a_h[i:i+blockx] for i in xrange(0, len(a_h), blockx))
-    cuda.memcpy_htod(a_d, a_h)
-    cuda.memcpy_htod(b_d, b_h)
+    a_d = list(a_h[i:i+blockx] for i in xrange(0, len(a_h), blockx))
+    b_d = list(a_h[i:i+blockx] for i in xrange(0, len(a_h), blockx))
+    a_h, b_h = ts[pairlenMax-pairlen::], qs[pairlenMax-pairlen::]
+    #cuda.memcpy_htod(a_d, a_h)
+    #cuda.memcpy_htod(b_d, b_h)
 
     # call the kernel
-    comp(a_d, b_d, cuda.Out(c), block = (blockx, 1, 1), grid = (gridx, 1)
-    print_c = True
-
-    # reset a_h, b_h, indel_dis
-    a_h, b_h = ts[pairlenMax-pairlen::], qs[pairlenMax-pairlen::]
-    indel_dis = indel_dis[pairlenMax/windowSize::]
-
-  else:
-    pairlen += len(ts)
-    a_h += ts
-    b_h += qs
+    comp(cuda.In(a_h), cuda.In(b_h), cuda.Out(c), block = (blockx, 1, 1), grid = (gridx, 1))
+    

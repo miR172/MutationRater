@@ -63,17 +63,17 @@ gridx, blockx = 60000, 32
 pairlen = 0
 pairlenMax = gridx*blockx*32
 
+a_h, b_h = "", "" # two concatenated sequences to be loaded on GPU
+c = numpy.array(range(0, 32)).astype(numpy.float32)
+
 indel_dis = []
 indel_dis_c = []
 windowSize, remain = 32, 0
 
-a_h, b_h = "", "" # two concatenated sequences to be loaded on GPU
-c = numpy.array(range(0, pairlenMax/windowSize)).astype(numpy.float32)
-
 print_c = False
 
-a_d = cuda.mem_alloc(pairlenMax)
-b_d = cuda.mem_alloc(pairlenMax)
+a_d = cuda.mem_alloc(pairlenMax*4)
+b_d = cuda.mem_alloc(pairlenMax*4)
 
 while aligns!= []:
   al = aligns.pop(0)
@@ -83,8 +83,13 @@ while aligns!= []:
   if len(ts) <= remain:
     remain -= len(ts)
   else:
+<<<<<<< HEAD
+    indel_dis += getIndelDist(len(ts)-remain)
+    remain = windowSize - (len(ts)-remain)%windowSize
+=======
     indel_dis += helper.getIndelDist(len(ts)-remain)
     remain = windowSize - abs(len(ts)-remain)%windowSize
+>>>>>>> a7862728ad6a18ea98ec1efcad148d18e0ea7b6f
   # print len(ts), len(qs)
 
   if al[0] + pairlen >=0: # reach maximum, initial a load
@@ -94,7 +99,7 @@ while aligns!= []:
 
     a_h += ts[0:pairlenMax-pairlen]
     b_h += qs[0:pairlenMax-pairlen]
-    indel_dis_c = indel_dis[0:pairlenMax/windowSize]
+    indel_dis_c = indel_dis[0:pairlenMax/windowSize+1]
 
     # a_d = list(a_h[i:i+blockx] for i in xrange(0, len(a_h), blockx))
     # b_d = list(a_h[i:i+blockx] for i in xrange(0, len(a_h), blockx))
