@@ -45,7 +45,7 @@ __global__ void compare(char * a, char * b, float *c){
   int i = threadIdx.x*blockDim.x+threadIdx.y+blockIdx.x*blockDim.x*blockDim.y;
   int d = i/32;
   if (a[i] == b[i])
-    d_sum[d] += 1;
+    d_sum[threadIdx.x] += 1;
 
   __syncthreads(); 
   
@@ -92,7 +92,7 @@ while aligns!= []:
     remain = windowSize - abs(len(ts)-remain)%windowSize
   # print len(ts), len(qs)
 
-  if al[0] + pairlen >=0: # reach maximum, initial a load
+  if al[0] + pairlen >= pairlenMax: # reach maximum, initial a load
     if print_c:
       # if previously did someth, export the result
       helper.export_result(c, indel_dis_c, outf)
