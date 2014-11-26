@@ -1,4 +1,5 @@
 import re
+import math
 
 class SequenceReader:
 	'''
@@ -52,8 +53,18 @@ def generateAlignments(file):
 
 
 def export_result(a, b, f):
-    outf = open(f, 'w')
+    outf = open(f, 'a')
     for i in xrange(0, len(b)):
         outf.write("%f\t%d\n"%(a[i],b[i]))
     outf.close()
 
+def getIndelDist(length, windowsize=32):
+    if length <= windowsize: return [0]
+    if length <= 2*windowsize: return [0, 0]
+    w = int(math.ceil(float(length)/windowsize))
+    r1 = range(0, w/2)
+    r2 = range(w/2-1, -1, -1)
+    if w%2 == 0: return r1+r2
+    else: return r1+[w/2]+r2
+
+    
