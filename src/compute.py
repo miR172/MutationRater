@@ -65,8 +65,6 @@ qreader = helper.SequenceReader(sys.argv[2])
 mod = SourceModule(kernel_script)
 comp = mod.get_function("compare")
 
-# a = "numpy.array(range(0, msize)).astype(numpy.int32)"
-# b = "numpy.array(range(msize, 0)).astype(numpy.int32)"
 
 gridx, blockx = 1, 512
 pairlen = 0
@@ -81,13 +79,10 @@ c = numpy.array(range(0, pairlenMax/windowSize)).astype(numpy.float32)
 
 print_c = False
 
-#a_d = cuda.mem_alloc(pairlenMax)
-#b_d = cuda.mem_alloc(pairlenMax)
+a_gpu = cuda.mem_alloc(pairlenMax)
+b_gpu = cuda.mem_alloc(pairlenMax)
 
 while aligns!= []:
-
-  print "\nNew iteration...\n"
-  print len(a_h), len(b_h), pairlen
 
   if pairlen < pairlenMax:
 
@@ -109,31 +104,29 @@ while aligns!= []:
 
     continue
 
-    # reach maximum, initial a load
-  print "\n\n[pairlen] hit [pairlenMax], initial kernel call with [", print_c, "] previous result to export.\n"
+  # reach maximum, initial a load
+  print "\n[pairlen] hit [pairlenMax], initial kernel call with [", print_c, "] previous result to export..."
   if print_c:
     #if previously did someth, export the result
     helper.export_result(c, indel_dis_c, outf)
 
   indel_dis_c = indel_dis[0:pairlenMax/windowSize]
   
-  # cuda.memcpy_htod(a_d, a_h)
-  # cuda.memcpy_htod(b_d, b_h)
   a_d = numpy.fromstring(a_h[0:pairlenMax], dtype=numpy.uint8)
   b_d = numpy.fromstring(b_h[0:pairlenMax], dtype=numpy.uint8)  
+  cuda.memcpy_htod(a_gpu, a_d)
+  cuda.memcpy_htod(b_gpu, b_d)
 
-  #print a_d
-  #print b_d
-  print indel_dis_c
   a_h = a_h[pairlenMax:]
   b_h = b_h[pairlenMax:]
   indel_dis = indel_dis[pairlenMax/windowSize::]
   pairlen = len(a_h)
   
   # call the kernel
-  comp(cuda.In(a_d), cuda.In(b_d), cuda.Out(c), block = (blockx/windowSize, windowSize, 1), grid = (gridx, 1))
+  comp(a_gpu, b_gpu, cuda.Out(c), block = (blockx/windowSize, windowSize, 1), grid = (gridx, 1))
+
   print_c = True
-  print "\nKernel returns."
+  print "...Kernel Starts, CPU goto load data.\n"
 
 
 outf.close()
