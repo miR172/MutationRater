@@ -66,7 +66,7 @@ mod = SourceModule(kernel_script)
 comp = mod.get_function("compare")
 
 
-gridx, blockx = 1, 512
+gridx, blockx = 600, 1024
 pairlen = 0
 pairlenMax = gridx*blockx
 
@@ -79,8 +79,8 @@ c = numpy.array(range(0, pairlenMax/windowSize)).astype(numpy.float32)
 
 print_c = False
 
-a_gpu = cuda.mem_alloc(pairlenMax)
-b_gpu = cuda.mem_alloc(pairlenMax)
+# a_gpu = cuda.mem_alloc(pairlenMax)
+# b_gpu = cuda.mem_alloc(pairlenMax)
 
 while aligns!= []:
 
@@ -114,8 +114,8 @@ while aligns!= []:
   
   a_d = numpy.fromstring(a_h[0:pairlenMax], dtype=numpy.uint8)
   b_d = numpy.fromstring(b_h[0:pairlenMax], dtype=numpy.uint8)  
-  cuda.memcpy_htod(a_gpu, a_d)
-  cuda.memcpy_htod(b_gpu, b_d)
+  #cuda.memcpy_htod(a_gpu, a_d)
+  #cuda.memcpy_htod(b_gpu, b_d)
 
   a_h = a_h[pairlenMax:]
   b_h = b_h[pairlenMax:]
@@ -123,7 +123,7 @@ while aligns!= []:
   pairlen = len(a_h)
   
   # call the kernel
-  comp(a_gpu, b_gpu, cuda.Out(c), block = (blockx/windowSize, windowSize, 1), grid = (gridx, 1))
+  comp(cuda.In(a_d), cuda.In(b_d), cuda.Out(c), block = (blockx/windowSize, windowSize, 1), grid = (gridx, 1))
 
   print_c = True
   print "...Kernel Starts, CPU goto load data.\n"
