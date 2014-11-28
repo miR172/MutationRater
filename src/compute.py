@@ -48,7 +48,8 @@ __global__ void compare(char * a, char * b, float *c){
 
   int i = threadIdx.x*blockDim.y+threadIdx.y+blockIdx.x*blockDim.x*blockDim.y;
   if (a[i] != b[i])
-    d_sum[threadIdx.x] += 1;
+    //d_sum[threadIdx.x] += 1;
+    atomicAdd(d_sum + threadIdx.x, 1);
 
   __syncthreads(); 
   

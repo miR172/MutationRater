@@ -1,21 +1,21 @@
 ## helper.py
 
-### class SequenceReader
+### class SGen
 This class reads in a chr*.fa file and allow queries on it
 
-- **SequenceReader(file)**
+- **SGen(file)**
 
 	constructor: opens a sequence file with path *file* with standard format. 
 	```
 	>>> from helper import *
-	>>> sr = SequenceReader("../data/chr1.fa")
+	>>> sg = SGen("../data/chr1.fa")
 	```
 
-- **getStartWithLen(start, len)**
+- **get(start, len)**
 
 	return a slice of sequence, starting at index *start* with length *len*
 	```
-	>>> sr.getStartWithLen(87771,15)
+	>>> sg.get(87771,15)
 	'CCAGCCCTCTTGGCC'
 	```
 

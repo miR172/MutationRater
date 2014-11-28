@@ -1,5 +1,6 @@
 import re
 import math
+import os
 
 class SequenceReader:
 	'''
@@ -19,6 +20,37 @@ class SequenceReader:
 	def getStartWithLen(self, start, len):
 		return self.content[start:start+len]
 
+
+class SGen:
+	'''
+	This class read in sequence from chr*.fa
+	by IO
+	'''
+
+	def __init__(self,file):
+		self.f = open(file, 'r')
+		#discard the fisrt line
+		self.f.readline() 
+		# find out how many charactors per line
+		# without the newline
+		self.n = len(self.f.readline()) - 1 
+
+	def get(self, start, length):
+		self.f.seek(0, os.SEEK_SET)
+		self.f.readline() #discard the first line
+
+		nl = start / self.n
+		self.f.seek(start + nl, os.SEEK_CUR)
+
+		lst = self.f.read(length).split('\n')
+		
+		#count the extra newline read in
+		# and compensate
+		result = ''.join(lst) + self.f.read(len(lst)-1)
+		
+		return result
+
+	
 
 def generateAlignments(file):
 	'''
