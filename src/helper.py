@@ -28,7 +28,7 @@ class SGen:
 	'''
 
 	def __init__(self,file):
-		self.f = open(file, 'r')
+		self.f = open(file, 'rb')
 		#discard the fisrt line
 		self.f.readline() 
 		# find out how many charactors per line

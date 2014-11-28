@@ -67,7 +67,7 @@ mod = SourceModule(kernel_script)
 comp = mod.get_function("compare")
 
 
-gridx, blockx = 1, 512
+gridx, blockx = 1000, 512
 pairlen = 0
 pairlenMax = gridx*blockx
 
