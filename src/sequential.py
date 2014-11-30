@@ -27,6 +27,7 @@ for f in sys.argv[1::len(sys.argv)-1]:
 f = "result.txt" if len(sys.argv) < 5 else sys.argv[4]
 outf = open(f, 'w')
 
+alignf = sys.argv[3]
 print "comparing\n"+sys.argv[1]+"\nand\n"+sys.argv[2]+"\nto\n"+f
 
 #sys.exit()
@@ -35,12 +36,11 @@ import numpy
 import helper # module we build to support retrieving sequence
 
 
-aligns = helper.generateAlignments(sys.argv[3]) 
 treader = helper.SequenceReader(sys.argv[1])
 qreader = helper.SequenceReader(sys.argv[2])
 
 
-gridx, blockx = 1, 512
+gridx, blockx = 600, 1024
 pairlen = 0
 pairlenMax = gridx*blockx
 
@@ -53,63 +53,53 @@ c = numpy.array(range(0, pairlenMax/windowSize)).astype(numpy.float32)
 
 print_c = False
 
-#a_d = cuda.mem_alloc(pairlenMax)
-#b_d = cuda.mem_alloc(pairlenMax)
+al, prev = [], []
+for line in open(alignf):
+  al, prev = helper.alignmentProcess(line, al, prev)
+  if al is None:
+    print "Done!"
+    sys.exit()  
+  # print "\nNew iteration...", len(a_h), len(b_h), pairlen
 
-while aligns!= []:
+  ts = treader.getStartWithLen(al[1], al[0])
+  qs = qreader.getStartWithLen(al[2], al[0])
 
-  print "\nNew iteration...\n"
-  print len(a_h), len(b_h), pairlen
+  # print "ts", ts
+  # print "qs", qs
 
-  if pairlen < pairlenMax:
+  if len(ts) <= remain:
+    remain -= len(ts)
+  else:
+    indel_dis += helper.getIndelDist(len(ts)-remain)
+    remain = windowSize - abs(len(ts)-remain)%windowSize
 
-    al = aligns.pop(0)
+  a_h += ts
+  b_h += qs
+  pairlen += al[0]
+
+  while pairlen >= pairlenMax:
+  # reach maximum, initial a load
+
+    print "\n\n[pairlen] hit [pairlenMax], initial sequential comparison call with [", print_c, "] previous result to export.\n"
+
+    if print_c:
+      #if previously did someth, export the result
+      helper.export_result(c, indel_dis_c, outf)
+
+    # cuda.memcpy_htod(a_d, a_h)
+    # cuda.memcpy_htod(b_d, b_h)
+
+    indel_dis_c = indel_dis[0:pairlenMax/windowSize]
+    a_d = a_h[0:pairlenMax]
+    b_d = b_h[0:pairlenMax]  
+
+    a_h = a_h[pairlenMax:]
+    b_h = b_h[pairlenMax:]
+    indel_dis = indel_dis[pairlenMax/windowSize::]
+    pairlen = len(a_h)
   
-    pairlen += al[0]
-
-    ts = treader.getStartWithLen(al[1], al[0])
-    qs = qreader.getStartWithLen(al[2], al[0])
-    print "ts", ts
-    print "qs", qs
-    if len(ts) <= remain:
-      remain -= len(ts)
-    else:
-      indel_dis += helper.getIndelDist(len(ts)-remain)
-      remain = windowSize - abs(len(ts)-remain)%windowSize
-    # print len(ts), len(qs)
-
-    a_h += ts
-    b_h += qs
-
-    continue
-
-    # reach maximum, initial a load
-  print "\n\n[pairlen] hit [pairlenMax], initial sequential comparison call with [", print_c, "] previous result to export.\n"
-  if print_c:
-    #if previously did someth, export the result
-    helper.export_result(c, indel_dis_c, outf)
-
-  indel_dis_c = indel_dis[0:pairlenMax/windowSize]
-
-
-  # cuda.memcpy_htod(a_d, a_h)
-  # cuda.memcpy_htod(b_d, b_h)
-  a_d = a_h[0:pairlenMax]
-  b_d = b_h[0:pairlenMax]  
-
-  #print a_d
-  #print b_d
-
-  a_h = a_h[pairlenMax:]
-  b_h = b_h[pairlenMax:]
-  indel_dis = indel_dis[pairlenMax/windowSize::]
-  pairlen = len(a_h)
-  
-  # call the kernel
-  helper.comp(a_d, b_d, c, windowSize)
-  print_c = True
-  print a_d, b_d
-  print "\nSeq returns."
-
+    # call the kernel
+    helper.comp(a_d, b_d, c, windowSize)
+    print_c = True
 
 outf.close()

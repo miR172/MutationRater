@@ -50,39 +50,21 @@ class SGen:
 		
 		return result
 
-	
+def alignmentProcess(line, curr=[], prev=[]):
+    # curr = [len, start1, start2] --> lastly generate
+    # prev = [len, indel1, indel2] --> from file
+    # line = text read: the new line
+    line = line.strip("\n").split()
 
-def generateAlignments(file):
-	'''
-	input: a file containing alignments info
-		of a chromosome
-	output: a list of list. each element is a list of
-		the following:
-		alignment length,
-		start index of alignment for reference sequence
-		start index of alignment for query sequence
-	'''
+    if line == []: return None, None
 
-	alignments =[]
-	f = open(file, "r")
-	
-	# get the fields of the first line 
-	# which is the header
-	fields = f.readline().split()
-	i1 = int(fields[5])
-	i2 = int(fields[10])
-		
-	line = f.readline()
-	while line.strip() != "" and (not re.search(r"chr", line)):
-		fields = map(int, line.split())
-		alignments.append([fields[0], i1, i2])
-		if len(fields) > 1:
-			i1 += (fields[0] + fields[1])
-			i2 += (fields[0] + fields[2])
-		line = f.readline()
-	
-	return alignments		
-
+    if line[0].startswith("chain"): # title line
+        curr = [0, int(line[5]), int(line[10])]
+        prev = [0, 0, 0]
+    else: # normal line
+        curr = [int(line[0]), prev[1]+curr[1]+curr[0], prev[2]+curr[2]+curr[0]]
+        prev = list(int(i) for i in line)
+    return curr, prev
 
 def export_result(a, b, f):
     for i in xrange(0, len(b)):
@@ -104,6 +86,6 @@ def comp(a, b, c, windowSize):
         if a[i] != b[i]: n+=1
         if i%windowSize == windowSize-1:
             c[i/windowSize] = float(n)/windowSize
-            print "c[%d] %f n %d"%(i, c[i/windowSize], n)
+            # print "c[%d] %f n %d"%(i, c[i/windowSize], n)
             n = 0
         i += 1
