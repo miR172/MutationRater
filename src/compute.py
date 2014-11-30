@@ -55,7 +55,6 @@ __global__ void compare(char * a, char * b, float *c){
   __syncthreads(); 
   
   if (threadIdx.y < 1)
-ihile aligns!= []:
     c[blockIdx.x*blockDim.x+threadIdx.x] = ((float)d_sum[threadIdx.x])/32;
 
 }
