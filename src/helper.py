@@ -43,10 +43,20 @@ class SGen:
 		self.f.seek(start + nl, os.SEEK_CUR)
 
 		lst = self.f.read(length).split('\n')
-		
+		result = ''.join(lst)
+
 		#count the extra newline read in
 		# and compensate
-		result = ''.join(lst) + self.f.read(len(lst)-1)
+		n = len(lst) - 1
+		str1 = self.f.read(n)
+
+		while '\n' in str1:
+			lst1 = str1.split('\n')
+			n = len(lst1) - 1
+			result += ''.join(lst1)
+			str1 = self.f.read(n)
+
+		result += str1
 		
 		return result
 

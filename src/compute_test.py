@@ -26,6 +26,7 @@ for f in sys.argv[1::len(sys.argv)-1]:
 
 f = "result.txt" if len(sys.argv) < 5 else sys.argv[4]
 outf = open(f, 'w')
+alignf = sys.argv[3]
 
 print "comparing\n"+sys.argv[1]+"\nand\n"+sys.argv[2]+"\nto\n"+f
 
@@ -61,20 +62,20 @@ __global__ void compare(char * a, char * b, float *c) {
   val = reduce(val);
 
   if (threadIdx.x % 32 == 0)
-    c[blockIdx.x * 16 + threadIdx.x / 32] = (float)val/32;
+    c[blockIdx.x * 32 + threadIdx.x / 32] = (float)val/32;
 
 }
 """
 
-aligns = helper.generateAlignments(sys.argv[3]) 
-tgen = helper.SequenceReader(sys.argv[1])
-qgen = helper.SequenceReader(sys.argv[2])
+# aligns = helper.generateAlignments(sys.argv[3]) 
+treader = helper.SequenceReader(sys.argv[1])
+qreader = helper.SequenceReader(sys.argv[2])
 
 mod = SourceModule(kernel_script)
 comp = mod.get_function("compare")
 
 
-gridx, blockx = 1000, 512
+gridx, blockx = 600, 1024
 pairlen = 0
 pairlenMax = gridx*blockx
 
@@ -87,54 +88,61 @@ c = numpy.array(range(0, pairlenMax/windowSize)).astype(numpy.float32)
 
 print_c = False
 
-a_gpu = cuda.mem_alloc(pairlenMax)
-b_gpu = cuda.mem_alloc(pairlenMax)
+# b_gpu = cuda.mem_alloc(pairlenMax)
+al, prev = [], []
+for line in open(alignf):
+  al, prev = helper.alignmentProcess(line, al, prev)
+  if al is None:
+    print "\nDone!\n"
+    sys.exit()
 
-while aligns!= []:
+  # print "\nNew iteration...", len(a_h), len(b_h), pairlen
 
-  if pairlen < pairlenMax:
+  ts = treader.getStartWithLen(al[1], al[0])
+  qs = qreader.getStartWithLen(al[2], al[0])
 
-    al = aligns.pop(0)
+  # print "ts", ts
+  # print "qs", qs
+
+  if len(ts) <= remain:
+    remain -= len(ts)
+  else:
+    indel_dis += helper.getIndelDist(len(ts)-remain)
+    remain = windowSize - abs(len(ts)-remain)%windowSize
+
+  a_h += ts
+  b_h += qs
+  pairlen += al[0]
+
+  while pairlen >= pairlenMax:
+    # reach maximum, initial a load
+
+    print "\n[pairlen] hit [pairlenMax], initial kernel call with [", print_c, "] previous result to export..."
+
+    if print_c:
+      #if previously did someth, export the result
+      helper.export_result(c, indel_dis_c, outf)
+
+    indel_dis_c = indel_dis[0:pairlenMax/windowSize]
   
-    pairlen += al[0]
+    a_d = numpy.fromstring(a_h[0:pairlenMax], dtype=numpy.uint8)
+    b_d = numpy.fromstring(b_h[0:pairlenMax], dtype=numpy.uint8)  
+    #cuda.memcpy_htod(a_gpu, a_d)
+    #cuda.memcpy_htod(b_gpu, b_d)
 
-    ts = tgen.getStartWithLen(al[1], al[0])
-    qs = qgen.getStartWithLen(al[2], al[0])
-    if len(ts) <= remain:
-      remain -= len(ts)
-    else:
-      indel_dis += helper.getIndelDist(len(ts)-remain)
-      remain = windowSize - abs(len(ts)-remain)%windowSize
-    # print len(ts), len(qs)
-
-    a_h += ts
-    b_h += qs
-
-    continue
-
-  # reach maximum, initial a load
-  print "\n[pairlen] hit [pairlenMax], initial kernel call with [", print_c, "] previous result to export..."
-  if print_c:
-    #if previously did someth, export the result
-    helper.export_result(c, indel_dis_c, outf)
-
-  indel_dis_c = indel_dis[0:pairlenMax/windowSize]
+    a_h = a_h[pairlenMax:]
+    b_h = b_h[pairlenMax:]
+    indel_dis = indel_dis[pairlenMax/windowSize::]
+    pairlen = len(a_h)
   
-  a_d = numpy.fromstring(a_h[0:pairlenMax], dtype=numpy.uint8)
-  b_d = numpy.fromstring(b_h[0:pairlenMax], dtype=numpy.uint8)  
-  cuda.memcpy_htod(a_gpu, a_d)
-  cuda.memcpy_htod(b_gpu, b_d)
+    # call the kernel
+    comp(cuda.In(a_d), cuda.In(b_d), cuda.Out(c), block = (blockx, 1, 1), grid = (gridx, 1))
 
-  a_h = a_h[pairlenMax:]
-  b_h = b_h[pairlenMax:]
-  indel_dis = indel_dis[pairlenMax/windowSize::]
-  pairlen = len(a_h)
-  
-  # call the kernel
-  comp(a_gpu, b_gpu, cuda.Out(c), block = (blockx,1, 1), grid = (gridx, 1))
-
-  print_c = True
-  print "...Kernel Starts, CPU goto load data.\n"
+    print_c = True
+    print "...Kernel Starts, CPU goto load data.\n"
 
 
 outf.close()
+
+
+
